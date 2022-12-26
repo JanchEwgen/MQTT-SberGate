@@ -1,0 +1,39 @@
+name: "MQTT SberGate"
+version: "1.0.1"
+description: "MQTT SberGate SberDevice IoT Agent for Home Assistant"
+url: https://janch.ru/
+webui: http://[HOST]:[PORT:9123]
+slug: "mqtt-sber-gate"
+
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+
+startup: before
+
+ports:
+  9123/tcp: 9123
+ports_description:
+  9123/tcp: Management
+
+options:
+  ha-api_url: "http://localhost:8123"
+  ha-api_token: ""
+  sber-mqtt_broker: "mqtt-partners.iot.sberdevices.ru"
+  sber-mqtt_broker_port: 8883
+  sber-mqtt_login: "mqtt-sber-login"
+  sber-mqtt_password: "mqtt-sber-password"
+  sber-http_api_endpoint: "https://mqtt-partners.iot.sberdevices.ru"
+
+schema:
+  ha-api_url: str
+  ha-api_token: str
+  sber-mqtt_broker: str
+  sber-mqtt_broker_port: int
+  sber-mqtt_login: str
+  sber-mqtt_password: password
+  sber-http_api_endpoint: str?
