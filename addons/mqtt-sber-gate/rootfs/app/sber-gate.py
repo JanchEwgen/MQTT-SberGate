@@ -48,10 +48,10 @@ def ha_switch(id,OnOff):
       url=Options['ha-api_url']+'/api/services/switch/turn_off'
    hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
    response=requests.post(url, json={"entity_id": "switch."+id}, headers=hds)
-   if response.status_code == 200:
-      log(response.text)
-   else:
-      log(response.status_code)
+#   if response.status_code == 200:
+#      log(response.text)
+#   else:
+#      log(response.status_code)
 
 
 #*******************************
@@ -155,7 +155,7 @@ class CDevicesDB(object):
             d['model_id']=''
             Dev['devices'].append(d)
       self.mqtt_json_devices_list=json.dumps(Dev)
-      log('New Devices List for MQTT: '+self.mqtt_json_devices_list)
+#      log('New Devices List for MQTT: '+self.mqtt_json_devices_list)
       return self.mqtt_json_devices_list
 
    def do_mqtt_json_states_list(self,dl):
@@ -225,7 +225,7 @@ def on_connect(mqttc, obj, flags, rc):
 
 def on_disconnect(client, userdata, rc):
     if rc != 0:
-        log("Unexpected MQTT disconnection. Will auto-reconnect")
+        log("Unexpected MQTT disconnection. Will auto-reconnect. rc: "+str(rc))
 
 def on_message(mqttc, obj, msg):
     log(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
@@ -260,20 +260,20 @@ def on_message_cmd(mqttc, obj, msg):
          if k['value']['type'] == 'INTEGER':
             DevicesDB.change_state(id,k['key'],k['value'].get('integer_value',0))
    send_status(mqttc,DevicesDB.do_mqtt_json_states_list([]))
-   log(DevicesDB.mqtt_json_states_list)
+#   log(DevicesDB.mqtt_json_states_list)
 
 def on_message_stat(mqttc, obj, msg):
    data=json.loads(msg.payload).get('devices',[])
    log("GetStatus: "  +  str(msg.payload))
    send_status(mqttc,DevicesDB.do_mqtt_json_states_list(data))
-   log("Answer: "+DevicesDB.mqtt_json_states_list)
+#   log("Answer: "+DevicesDB.mqtt_json_states_list)
 
 
 def on_errors(mqttc, obj, msg):
    log("Sber MQTT Errors: " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
 
 def on_message_conf(mqttc, obj, msg):
-   print("Config: " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+   log("Config: " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
 
 def on_global_conf(mqttc, obj, msg):
    data=json.loads(msg.payload)
@@ -333,7 +333,8 @@ for s in res:
 #mqttHA.connect(Options['ha-mqtt_broker'], Options['ha-mqtt_broker_port'], 60)
 
 #******************* Configure client (SberDevices Broker)
-mqttc = mqtt.Client("HA client")
+#mqttc = mqtt.Client("HA client")
+mqttc = mqtt.Client()
 mqttc.on_connect = on_connect
 mqttc.on_subscribe = on_subscribe
 #mqttc.on_publish = on_publish
@@ -470,7 +471,7 @@ def static_answer(self,file):
       f=file.replace('/','\\')
    else:
       f=file
-   log('Отправка статического файла: '+f+'; MIME:'+m)
+   log('Отправка файла: '+f+'; MIME:'+m)
    send_file(self,f,m+'; charset=utf-8')
 
 hostName = ''
