@@ -1,4 +1,4 @@
-﻿# MQTT-SberGate
+﻿# MQTT-SberGate 1.0.3
 ## MQTT SberGate SberDevice IoT Agent for Home Assistant
 
 Агент представляет собой прослойку между облаком Sber и HomeAssistant (HA).
@@ -37,8 +37,13 @@
 ## Ссылки.
 
 Регистрация пространства в Studio: https://developers.sber.ru/docs/ru/smarthome/space/registration
+
 Создание проекта интеграции в Studio: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration-project
+
 Авторизация контроллера в облаке Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/controller-authorization
+
 Как работает интеграция Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/integration-scheme
+
 Создание интеграции Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration
+
 HA REST API: https://developers.home-assistant.io/docs/api/rest
