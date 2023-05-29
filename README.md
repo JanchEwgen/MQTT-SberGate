@@ -1,18 +1,20 @@
 ﻿# MQTT-SberGate
-MQTT SberGate SberDevice IoT Agent for Home Assistant
+## MQTT SberGate SberDevice IoT Agent for Home Assistant
 
 Агент представляет собой прослойку между облаком Sber и HomeAssistant (HA).
 Его задача взять из HA нужные устройства, отобразить их в облаке Sber и отслеживать
 изменения в облаке с последующей передачей в HA.
 На данный момент агент выбирает сущности switch и script и отображает их как relay в облаке Sber.
 
-Первоначальные настройки.
+## Первоначальные настройки.
+
 Для работы агента необходима регистрация в Studio (https://developers.sber.ru/studio/workspaces/).
 Требуется создать интеграцию и получить регистрационные данные для агента (sber-mqtt_login, sber-mqtt_password).
 Также необходим токен для управления HA. Очень рекомендую завести для этого отдельного пользователя.
 Для получения заходим в профиль пользователя и создаём долгосрочный токен доступа (ha-api_token)
 
-Немного истории.
+## Немного истории.
+
 Проект начался незадолго до нового года, когда подключенную к HomeAsistant ёлочку захотелось включать голосом.
 Благо к тому времени у Sberа уже был MQTT-to-Cloud для DIY (https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/mqtt-to-diy).
 Правда список поддерживаемых контроллеров ограничивается всеголишь двумя: LogicMachine и Wiren Board.
@@ -29,7 +31,8 @@ MQTT SberGate SberDevice IoT Agent for Home Assistant
 Теперь стало возможно сказать ассистенту: "Включи камеру на улице". После чего отрабатывает скрипт HA который отправляет в VLC нужный поток.
 Попытки прокинуть script как камеру не увенчались успехом, даже писал в поддержку. Получил ответ, что-то вроде "пока не реализовано".
 
-Ссылки.
+## Ссылки.
+
 Регистрация пространства в Studio: https://developers.sber.ru/docs/ru/smarthome/space/registration
 Создание проекта интеграции в Studio: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration-project
 Авторизация контроллера в облаке Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/controller-authorization
