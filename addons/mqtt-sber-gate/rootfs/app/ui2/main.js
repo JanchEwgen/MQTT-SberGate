@@ -1,17 +1,27 @@
 function Init(){
    AddBlok('<h1>SberGate</h1>')
    AddBlok('<a href="index.html">Перейти к настройкам СберАгента</a></p>')
-   AddBlok('<h2>Устройства:</h2>')
+   AddBlok('<h2>Команды:</h2>')
+//   AddBlok('<button class="btn">&#128465; Удалить</button>')
+   AddBlok('<button id="DB_delete" onclick="RunCmd(this.id)">   &#128465; Удалить базу устройств</button><button id="exit" onclick="RunCmd(this.id)">Выход</button>')
+   AddBlok('<h2>Устройства:</h2>','alert')
    apiGet()
 }
-function AddBlok(str){
+function AddBlok(str,CN){
    let div = document.createElement('div');
-   div.className = "alert";
+   if (CN) {div.className = CN;}
    div.innerHTML = str;
    let el = document.getElementById('root');
    if (el) {el.append(div)}
 //   document.body.append(div);
 }
+
+function RunCmd(id,opt){
+   alert(id+':'+opt);
+   let s = {'command':id}
+   apiSend(s,'/api/v2/command');
+}
+
 
 function ChangeDev(d){
    var t={};   var s={};
@@ -19,7 +29,7 @@ function ChangeDev(d){
    t[d.dataset.id]['enabled']=d.checked;
    s['devices']=[];
    s['devices'].push(t);
-   apiSet(s);
+   apiSend(s,'/api/v2/devices');
    //console.dir(d)
 //   console.log(d.dataset.id);
 //   console.log(d.checked);
@@ -106,10 +116,11 @@ function apiGet(){
    };
 }
 
-function apiSet(d){ console.log(d);
+function apiSend(d,api){ console.log(d);
+   if (typeof api == "undefined" ) { api = '/api/v2/devices';}
    let xhr = new XMLHttpRequest();
    let json = JSON.stringify(d);
-   xhr.open('POST', '/api/v2/devices', true);
+   xhr.open('POST', api, true);
    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
    ///xhr.onreadystatechange = ...;
    xhr.send(json);

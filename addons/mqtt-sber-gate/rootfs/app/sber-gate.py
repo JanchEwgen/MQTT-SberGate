@@ -47,12 +47,20 @@ def ha_switch(id,OnOff):
    else:
       url=Options['ha-api_url']+'/api/services/switch/turn_off'
    hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
-   response=requests.post(url, json={"entity_id": "switch."+id}, headers=hds)
+   response=requests.post(url, json={"entity_id": id}, headers=hds)
 #   if response.status_code == 200:
 #      log(response.text)
 #   else:
 #      log(response.status_code)
 
+def ha_script(id,OnOff):
+   log('Отправляем команду в HA для '+id+' ON: '+str(OnOff))
+   if OnOff:
+      url=Options['ha-api_url']+'/api/services/script/turn_on'
+   else:
+      url=Options['ha-api_url']+'/api/services/script/turn_off'
+   hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
+   response=requests.post(url, json={"entity_id": id}, headers=hds)
 
 #*******************************
 class CDevicesDB(object):
@@ -79,6 +87,9 @@ class CDevicesDB(object):
       json_write(self.fDB,self.DB)
 #      self.do_http_json_devices_list()
 
+   def clear(self,d):
+      self.DB={}
+      self.save_DB()
 
    def dev_add(self):
       print('device_Add')
@@ -108,8 +119,9 @@ class CDevicesDB(object):
          return k
 
    def update(self,id,d):
-      fl={'enabled':True,'name':'','default_name':'','nicknames':[],'home':'','room':'','groups':[],'model_id':'','category':'','hw_version':'','sw_version':''}
-      fl['entity']=''
+      fl={'enabled':False,'name':'','default_name':'','nicknames':[],'home':'','room':'','groups':[],'model_id':'','category':'','hw_version':'','sw_version':''}
+      fl['entity_ha']=''
+      fl['entity_type']=''
       fl['friendly_name']=''
       if (self.DB.get(id,None) is None):
          log('Device '+id+' Not Found. Adding')
@@ -143,6 +155,10 @@ class CDevicesDB(object):
       return r
 
    def do_mqtt_json_devices_list(self):
+      model_dict = {
+         'relay': {'id': 'model_relay', 'manufacturer': 'Janch', 'model': 'Relay', 'category': 'relay', 'features': ['online','on_off']},
+         'ipc': {'id': 'model_ipc', 'manufacturer': 'Janch', 'model': 'IPC', 'category': 'ipc', 'features': ['online','on_off']}
+      }
       Dev={}
       Dev['devices']=[]
       for k,v in self.DB.items():
@@ -151,7 +167,7 @@ class CDevicesDB(object):
             d['id']=k
             d['name']=v.get('name','')
             d['default_name']=v.get('default_name','')
-            d['model']={'id': 'model_01', 'manufacturer': 'Janch', 'model': 'Janch Device', 'category': 'relay', 'features': ['online','on_off']}
+            d['model']=model_dict.get(v.get('category',''), model_dict['relay'])
             d['model_id']=''
             Dev['devices'].append(d)
       self.mqtt_json_devices_list=json.dumps(Dev)
@@ -252,11 +268,14 @@ def on_message_cmd(mqttc, obj, msg):
    for id,v in data['devices'].items():
       for k in v['states']:
          if k['key'] == 'on_off':
-            val=k['value'].get('bool_value',False)
-            log('on_off set to '+str(val))
 #            infot = mqttHA.publish("sberdevices/"+id, str(val), qos=0)
-            DevicesDB.change_state(id,k['key'],val)
-            ha_switch(id,val)
+            if DevicesDB.DB[id]['entity_type'] == 'sw':
+               val=k['value'].get('bool_value',False)
+               log('on_off set to '+str(val))
+               DevicesDB.change_state(id,k['key'],val)
+               ha_switch(id,val)
+            if DevicesDB.DB[id]['entity_type'] == 'scr':
+               ha_script(id,True)
          if k['value']['type'] == 'INTEGER':
             DevicesDB.change_state(id,k['key'],k['value'].get('integer_value',0))
    send_status(mqttc,DevicesDB.do_mqtt_json_states_list([]))
@@ -317,13 +336,26 @@ AgentStatus={"online": True, "error": "",  "credentials": {'username':Options['s
 hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
 url=Options['ha-api_url']+'/api/states'
 res = requests.get(url, headers=hds).json()
+log(res)
 
+
+def upd_sw(id,s):
+   attr=s['attributes'].get('friendly_name','')
+   log('switch: ' + s['entity_id'] + ' '+attr)
+   DevicesDB.update(s['entity_id'],{'entity_ha': True,'entity_type': 'sw','friendly_name':attr,'category': 'relay'})
+def upd_scr(id,s):
+   attr=s['attributes'].get('friendly_name','')
+   log('script: ' + s['entity_id'] + ' '+attr)
+   DevicesDB.update(s['entity_id'],{'entity_ha': True,'entity_type': 'scr','friendly_name':attr,'category': 'relay'})
+def upd_default(id,s):
+   log('Неиспользуемый тип: ' + s['entity_id'])
 for s in res:
    a,b=s['entity_id'].split('.',1)
-   if (a == 'switch'):
-      attr=s['attributes'].get('friendly_name','')
-      log('switch: ' + b + ' '+attr)
-      DevicesDB.update(b,{'entity':a,'friendly_name':attr})
+   dict={
+      'switch': upd_sw,
+      'script': upd_scr
+   }
+   dict.get(a, upd_default)(s['entity_id'],s)
 
 #******************* Configure Local client (HA Broker)
 
@@ -437,6 +469,21 @@ def api2_devices_post(self,d):
    infot = mqttc.publish(sber_root_topic+'/up/config', DevicesDB.do_mqtt_json_devices_list(), qos=0)
    DevicesDB.save_DB()
 
+
+def command_default(d):
+   log('Получили неизвестную команду'+str(d))
+
+def command_exit(d):
+   log('Выход. '+str(d))
+   sys.exit()
+
+def api2_command_post(self,d):
+   dict={
+      'DB_delete': DevicesDB.clear,
+      'exit': command_exit
+   }
+   dict.get(d.get('command','unknow'), command_default)(d)
+
 def api2_devices(self):
    send_data(self, DevicesDB.do_http_json_devices_list_2(), "application/json")
 
@@ -522,7 +569,8 @@ class MyServer(BaseHTTPRequestHandler):
       d=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
       dict={
          '/api/v1/devices': api_devices_post,
-         '/api/v2/devices': api2_devices_post
+         '/api/v2/devices': api2_devices_post,
+         '/api/v2/command': api2_command_post
       }
       dict.get(self.path, api_default_post )(self,d)
 
@@ -546,6 +594,7 @@ static_request={
    '/api/v1/categories': 'categories.json',
    '/': '../app/ui2/index.html',
    '/ui2/main.js': '../app/ui2/main.js',
+   '/ui2/main.css': '../app/ui2/main.css',
    '/favicon.ico': '../app/ui2/favicon.ico',
    '/index.html': '../app/ui/index.html',
    '/static/css/2.a1e3eec8.chunk.css': '../app/ui/static/css/2.a1e3eec8.chunk.css',
