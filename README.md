@@ -28,9 +28,9 @@
 не даёт возможности разбираться и двигаться в этом направлении, да и поставленные задачи решины...
 
 Изначально было реализовано два MQTT подключения. Первое смотрело в облако Sber, а второе в локальный MQTT брокер HomeAssistant.
-Было очень неудобно, так как приходило городить огород чтобы HomeAssistant реагировал на данные внутреннего MQTT.
+Было очень неудобно, так как приходилось городить огород чтобы HomeAssistant реагировал на данные внутреннего MQTT.
 Но, мне подсказали, что у HomeAssistant есть замечательный REST API с помощью которого можно очень просто им управлять.
-Поэтому подключение к внутреннему MQTT HomeAssistant было отключено (код до сих пор ещё болтается в недрах агента),
+Поэтому подключение к внутреннему MQTT HomeAssistant было отключено (код до сих пор ещё болтается в недрах агента, возможно для чего-нибудь ещё пригодится),
 а управление переведено на REST API.
 
 Также подсмотрел замечательную идею управления AndroidTV через adb. Поэтому кроме switch дабавились script.
@@ -39,14 +39,14 @@
 
 ## Ссылки.
 
-Регистрация пространства в Studio: https://developers.sber.ru/docs/ru/smarthome/space/registration
+[Регистрация пространства в Studio](https://developers.sber.ru/docs/ru/smarthome/space/registration)
 
-Создание проекта интеграции в Studio: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration-project
+[Создание проекта интеграции в Studio](https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration-project)
 
-Авторизация контроллера в облаке Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/controller-authorization
+[Авторизация контроллера в облаке Sber](https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/controller-authorization)
 
-Как работает интеграция Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/integration-scheme
+[Как работает интеграция Sber](https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/integration-scheme)
 
-Создание интеграции Sber: https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration
+[Создание интеграции Sber](https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration)
 
-HA REST API: https://developers.home-assistant.io/docs/api/rest
+[HA REST API](https://developers.home-assistant.io/docs/api/rest)
