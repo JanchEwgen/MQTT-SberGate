@@ -1,4 +1,7 @@
 ARG BUILD_FROM
+ARG BUILD_DATE                             
+ARG BUILD_REF                              
+ARG BUILD_VERSION 
 FROM $BUILD_FROM
 
 # Install requirements for add-on
