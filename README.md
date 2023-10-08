@@ -1,4 +1,4 @@
-﻿# MQTT-SberGate 1.0.3
+﻿# MQTT-SberGate 1.0.4 (08.10.2023)
 ## MQTT SberGate SberDevice IoT Agent for Home Assistant
 
 Агент представляет собой прослойку между облаком Sber и HomeAssistant (HA).
@@ -14,6 +14,14 @@
 
 Также необходим токен для управления HA. Очень рекомендую завести для этого отдельного пользователя.
 Для получения заходим в профиль пользователя и создаём долгосрочный токен доступа (ha-api_token)
+
+## Изменения.
+
+###1.0.4 Эксперименты с HA WebSocket API
+
+Теперь появилась какая-никакая обратная связь. То есть если в HA трогаем выключатель, его состояние передаётся в облако Сбера.
+Функция не особо нужная, добавлена по большей части из любопытства, когда случайно заметил, что оказвается в HA есть WebSocket API.
+Добавлено опять же на скорую руку, поэтому возможно всё стало менее стабильным.
 
 ## Немного истории.
 
@@ -52,3 +60,7 @@
 [Создание интеграции Sber](https://developers.sber.ru/docs/ru/smarthome/mqtt-diy/create-mqtt-diy-integration)
 
 [HA REST API](https://developers.home-assistant.io/docs/api/rest)
+
+[HA WebSocket API] (https://developers.home-assistant.io/docs/api/websocket)
+
+[Telegram] (https://t.me/+k_w9uO0h73FkNjJi)

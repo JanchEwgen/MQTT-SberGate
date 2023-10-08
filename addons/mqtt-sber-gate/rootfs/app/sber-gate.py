@@ -10,6 +10,8 @@ import json
 import paho.mqtt.client as mqtt
 import ssl
 import requests
+import websocket
+import threading
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -98,6 +100,12 @@ class CDevicesDB(object):
       self.DB.pop(id, None)
       self.save_DB()
       log('Delete Device: '+id+'!')
+
+   def dev_inBase(self,id):
+      if self.DB.get(id,None) is None:
+         return False
+      else:
+         return True
 
    def change_state(self,id,key,value):
       if self.DB.get(id,None) is None:
@@ -301,6 +309,60 @@ def on_global_conf(mqttc, obj, msg):
 def log(s):
    dt=time.strftime("%Y%m%d-%H%M%S", time.localtime())
    print(dt+': '+str(s))
+
+
+#vvvvvvv WebSocket vvvvvvv
+
+def on_open(ws):
+#   {"type": "auth", "access_token": "ABCDEFGHIJKLMNOPQ"}
+   print("WebSocket: opened")
+#   ws.send("Hello, WebSocket!")
+   ws.send(json.dumps({"type": "auth", "access_token": Options['ha-api_token']}))
+def on_close(ws,a,b):
+   print("WebSocket: Connection closed")
+def on_message(ws, message):
+#   print(f"WebSocket: Received message: {message}")
+   mdata=json.loads(message)
+   ws_dict={
+      'auth_required': ws_auth_required,
+      'auth_ok': ws_auth_ok,
+      'auth_invalid': ws_auth_invalid,
+      'result': ws_result,
+      'event': ws_event,
+      'None': ws_default
+   }
+   ws_dict.get(mdata.get('type', 'None'), ws_default )(ws,message)
+
+def ws_auth_required(ws,msg):
+   log("WebSocket: auth_required")
+   ws.send(json.dumps({"type": "auth", "access_token": Options['ha-api_token']}))
+def ws_auth_ok(ws,msg):
+   log("WebSocket: auth_ok")
+   ws.send(json.dumps({'id': 1, 'type': 'subscribe_events', 'event_type': 'state_changed'}))
+def ws_auth_invalid(ws,msg):
+   log("WebSocket: auth_invalid")
+def ws_result(ws,msg):
+   log("WebSocket: result")
+def ws_event(ws,msg):
+#   print("WebSocket: event")
+   mdata=json.loads(msg)
+   id=mdata['event']['data']['new_state']['entity_id']
+   old_state=mdata['event']['data']['old_state']['state']
+   new_state=mdata['event']['data']['new_state']['state']
+   if DevicesDB.dev_inBase(id):
+      log('HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
+      if new_state == 'on':
+         DevicesDB.change_state(id,'on_off',True)
+      else:
+         DevicesDB.change_state(id,'on_off',False)
+      send_status(mqttc,DevicesDB.do_mqtt_json_states_list([]))
+#   else:
+#      print(id+' нет в базе')
+
+def ws_default(ws,msg):
+   print("WebSocket: default")
+
+#^^^^^^^ WebSocket ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #********** Start **********************************
 #https://developers.sber.ru/docs/ru/smarthome/c2c/value
@@ -603,13 +665,38 @@ static_request={
    '/static/js/main.a9292504.chunk.js': '../app/ui/static/js/main.a9292504.chunk.js'
 }
 
+
 webServer = HTTPServer((hostName, serverPort), MyServer)
 print("Server started http://%s:%s" % (hostName, serverPort))
+
 try:
-   webServer.serve_forever()
+#   webServer.serve_forever()
+   tsrv=threading.Thread(target=webServer.serve_forever)
+   tsrv.daemon = True
+   tsrv.start()
+
 
 except KeyboardInterrupt:
    pass
+
+
+print("Start WebSocket Client")
+#websocket.enableTrace(True)
+ws = websocket.WebSocketApp("ws://hasrv.janch.ru:8123/api/websocket",
+                            on_open=on_open,
+                            on_message=on_message,
+                            on_close=on_close)
+
+socketRun=True
+while socketRun:
+   ws.run_forever()
+   print('Socket disconect')
+   time.sleep(1)
+   print('Connecting')
+
+
+
+#tsrv.join()
 
 webServer.server_close()
 print("Server stopped.")
@@ -618,4 +705,4 @@ print("Server stopped.")
 
 while True:
    time.sleep(10)
-#   log('Agent HB')
+   log('Agent HB')
