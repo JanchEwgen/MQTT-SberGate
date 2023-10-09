@@ -1,4 +1,4 @@
-﻿# MQTT-SberGate 1.0.4 (08.10.2023)
+﻿# MQTT-SberGate 1.0.4 (09.10.2023)
 ## MQTT SberGate SberDevice IoT Agent for Home Assistant
 
 Агент представляет собой прослойку между облаком Sber и HomeAssistant (HA).
@@ -48,6 +48,8 @@
 Попытки прокинуть script как камеру не увенчались успехом, даже писал в поддержку. Получил ответ, что-то вроде "пока не реализовано".
 
 ## Ссылки.
+
+Для работы с MQTT используется [Eclipse Paho™ MQTT Python Client](https://github.com/eclipse/paho.mqtt.python)
 
 [Регистрация пространства в Studio](https://developers.sber.ru/docs/ru/smarthome/space/registration)
 

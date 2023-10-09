@@ -410,7 +410,7 @@ def upd_scr(id,s):
    log('script: ' + s['entity_id'] + ' '+attr)
    DevicesDB.update(s['entity_id'],{'entity_ha': True,'entity_type': 'scr','friendly_name':attr,'category': 'relay'})
 def upd_default(id,s):
-   log('Неиспользуемый тип: ' + s['entity_id'])
+#   log('Неиспользуемый тип: ' + s['entity_id'])
 for s in res:
    a,b=s['entity_id'].split('.',1)
    dict={
