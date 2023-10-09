@@ -680,9 +680,10 @@ except KeyboardInterrupt:
    pass
 
 
-print("Start WebSocket Client")
+ws_url=Options['ha-api_url'].replace('http','ws',1) + '/api/websocket'
+print('Start WebSocket Client URL: ' + ws_url)
 #websocket.enableTrace(True)
-ws = websocket.WebSocketApp("ws://hasrv.janch.ru:8123/api/websocket",
+ws = websocket.WebSocketApp(ws_url,
                             on_open=on_open,
                             on_message=on_message,
                             on_close=on_close)
