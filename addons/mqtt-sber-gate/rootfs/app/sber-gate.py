@@ -18,6 +18,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
+VERSION = '1.0.5'
+
 #*******************************
 def json_read(f):
    d=open(f,'r', encoding='utf-8').read()
@@ -144,6 +146,7 @@ class CDevicesDB(object):
 
    def DeviceStates_mqttSber(self,id):
       d=self.DB.get(id,None)
+#      log(d)
       r=[]
       if (d is None):
          log('Запрошен несуществующий объект: '+id)
@@ -152,19 +155,31 @@ class CDevicesDB(object):
       if (s is None):
          log('У объекта: '+id+'отсутствует информация о состояниях')
          return r
-      for k,v in s.items():
-         if (isinstance(v,bool)):
-            o={'key':k,'value':{"type": "BOOL", "bool_value": v}}
-         elif (isinstance(v, int)):
-            o={'key':k,'value':{"type": "INTEGER", "integer_value": v}}
-         else:
-            o={'key':k,'value':{"type": "BOOL", "bool_value": False}}
-         r.append(o)
+      if d['category'] == 'relay':
+         v=s.get('on_off',False)
+         r.append({'key':'online','value':{"type": "BOOL", "bool_value": True}})
+         r.append({'key':'on_off','value':{"type": "BOOL", "bool_value": v}})
+      if d['category'] == 'sensor_temp':
+         v=round(s.get('temperature',0)*10)
+         r.append({'key':'online','value':{"type": "BOOL", "bool_value": True}})
+         r.append({'key':'temperature','value':{"type": "INTEGER", "integer_value": v}})
+
+#      for k,v in s.items():
+#         log(k)
+#         if (isinstance(v,bool)):
+#            o={'key':k,'value':{"type": "BOOL", "bool_value": v}}
+#         elif (isinstance(v, int)):
+#            o={'key':k,'value':{"type": "INTEGER", "integer_value": v}}
+#         else:
+#            log(v)
+#            o={'key':k,'value':{"type": "BOOL", "bool_value": False}}
+#         r.append(o)
       return r
 
    def do_mqtt_json_devices_list(self):
       model_dict = {
-         'relay': {'id': 'model_relay', 'manufacturer': 'Janch', 'model': 'Relay', 'category': 'relay', 'features': ['online','on_off']},
+         'relay':       {'id': 'model_relay', 'manufacturer': 'Janch', 'model': 'Relay', 'category': 'relay', 'features': ['online','on_off']},
+         'sensor_temp': {'id': 'sensor_temp', 'manufacturer': 'Janch', 'model': 'sensor_temp', 'category': 'sensor_temp', 'features': ['online', 'temperature']},
          'ipc': {'id': 'model_ipc', 'manufacturer': 'Janch', 'model': 'IPC', 'category': 'ipc', 'features': ['online','on_off']}
       }
       Dev={}
@@ -190,13 +205,14 @@ class CDevicesDB(object):
       for id in dl:
          d=self.DB.get(id,None)
          if not (d is None):
-            s=d.get('States',None)
-            if (s is None):
-               log('У объекта: '+id+'отсутствует информация о состояниях')
-               self.DB[id]['States']={}
-               self.DB[id]['States']['online']=True
-            DStat['devices'][id]={}
-            DStat['devices'][id]['states']=self.DeviceStates_mqttSber(id)
+            if d['enabled']:
+               s=d.get('States',None)
+               if (s is None):
+                  log('У объекта: '+id+'отсутствует информация о состояниях')
+                  self.DB[id]['States']={}
+                  self.DB[id]['States']['online']=True
+               DStat['devices'][id]={}
+               DStat['devices'][id]['states']=self.DeviceStates_mqttSber(id)
       self.mqtt_json_states_list=json.dumps(DStat)
       return self.mqtt_json_states_list
 
@@ -313,14 +329,14 @@ def log(s):
 
 #vvvvvvv WebSocket vvvvvvv
 
-def on_open(ws):
+def ws_on_open(ws):
 #   {"type": "auth", "access_token": "ABCDEFGHIJKLMNOPQ"}
    print("WebSocket: opened")
 #   ws.send("Hello, WebSocket!")
    ws.send(json.dumps({"type": "auth", "access_token": Options['ha-api_token']}))
-def on_close(ws,a,b):
+def ws_on_close(ws,a,b):
    print("WebSocket: Connection closed")
-def on_message(ws, message):
+def ws_on_message(ws, message):
 #   print(f"WebSocket: Received message: {message}")
    mdata=json.loads(message)
    ws_dict={
@@ -349,12 +365,20 @@ def ws_event(ws,msg):
    id=mdata['event']['data']['new_state']['entity_id']
    old_state=mdata['event']['data']['old_state']['state']
    new_state=mdata['event']['data']['new_state']['state']
-   if DevicesDB.dev_inBase(id):
-      log('HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
-      if new_state == 'on':
-         DevicesDB.change_state(id,'on_off',True)
+   dev=DevicesDB.DB.get(id,None)
+   if not (dev is None): #   if DevicesDB.dev_inBase(id):
+      log(dev)
+      if dev['enabled']:
+         log('HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
+         if dev['category'] == 'sensor_temp':
+            DevicesDB.change_state(id,'temperature',float(new_state))
+         if dev['category'] == 'relay':
+            if new_state == 'on':
+               DevicesDB.change_state(id,'on_off',True)
+            else:
+               DevicesDB.change_state(id,'on_off',False)
       else:
-         DevicesDB.change_state(id,'on_off',False)
+         log('!HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
       send_status(mqttc,DevicesDB.do_mqtt_json_states_list([]))
 #   else:
 #      print(id+' нет в базе')
@@ -369,7 +393,7 @@ def ws_default(ws,msg):
 sber_types={'FLOAT':'float_value','INTEGER':'integer_value','STRING':'string_value','BOOL':'bool_value','ENUM':'enum_value','JSON':'','COLOUR':'colour_value'}
 #
 
-log('Start MQTT SberDevice IoT Agent for Home Assistant')
+log('Start MQTT SberGate IoT Agent for Home Assistant version: '+VERSION)
 log("Запущено в системе: "+ os.name)
 log("Текущая директория: "+ os.getcwd())
 log("Кодировка: "+ sys.getdefaultencoding())
@@ -397,9 +421,16 @@ AgentStatus={"online": True, "error": "",  "credentials": {'username':Options['s
 #url = "http://localhost:8123/ENDPOINT"
 hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
 url=Options['ha-api_url']+'/api/states'
-res = requests.get(url, headers=hds).json()
-log(res)
+res = requests.get(url, headers=hds)
 
+if res.status_code == 200:
+   log('Запрос устройств из Home Assistant выполнен штатно.')
+   ha_dev=res.json()
+else:
+   log('ОШИБКА! Запрос устройств из Home Assistant выполнен некоректно.')
+   ha_dev=[]
+   log('Запрошенный URL: ' + url)
+   log('Код ответа сервера: ' + str(res.status_code))
 
 def upd_sw(id,s):
    attr=s['attributes'].get('friendly_name','')
@@ -409,15 +440,23 @@ def upd_scr(id,s):
    attr=s['attributes'].get('friendly_name','')
    log('script: ' + s['entity_id'] + ' '+attr)
    DevicesDB.update(s['entity_id'],{'entity_ha': True,'entity_type': 'scr','friendly_name':attr,'category': 'relay'})
+def upd_sensor(id,s):
+   dc=s['attributes'].get('device_class','')
+   fn=s['attributes'].get('friendly_name','')
+   if dc == 'temperature':
+      log('Сенсор температуры: ' + id + ' ' + fn)
+      DevicesDB.update(id,{'entity_ha': True,'entity_type': 'sensor_temp', 'friendly_name': fn,'category': 'sensor_temp'})
+
 def upd_default(id,s):
 #   log('Неиспользуемый тип: ' + s['entity_id'])
    pass
 
-for s in res:
+for s in ha_dev:
    a,b=s['entity_id'].split('.',1)
    dict={
       'switch': upd_sw,
-      'script': upd_scr
+      'script': upd_scr,
+      'sensor': upd_sensor
    }
    dict.get(a, upd_default)(s['entity_id'],s)
 
@@ -683,12 +722,12 @@ except KeyboardInterrupt:
 
 
 ws_url=Options['ha-api_url'].replace('http','ws',1) + '/api/websocket'
-print('Start WebSocket Client URL: ' + ws_url)
+log('Start WebSocket Client URL: ' + ws_url)
 #websocket.enableTrace(True)
 ws = websocket.WebSocketApp(ws_url,
-                            on_open=on_open,
-                            on_message=on_message,
-                            on_close=on_close)
+                            on_open=ws_on_open,
+                            on_message=ws_on_message,
+                            on_close=ws_on_close)
 
 socketRun=True
 while socketRun:

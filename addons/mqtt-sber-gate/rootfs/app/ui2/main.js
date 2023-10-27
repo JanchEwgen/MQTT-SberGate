@@ -1,5 +1,5 @@
 function Init(){
-   AddBlok('<h1>SberGate</h1>')
+   AddBlok('<h1>SberGate version: 1.0.5</h1>')
    AddBlok('<a href="index.html">Перейти к настройкам СберАгента</a></p>')
    AddBlok('<h2>Команды:</h2>')
 //   AddBlok('<button class="btn">&#128465; Удалить</button>')
@@ -36,8 +36,8 @@ function ChangeDev(d){
 }
 
 function UpdateDeviceList(d){
-console.log(d);
-   let f={'enabled':'Включено','id':'ID','name':'Имя'}
+//console.log(d);
+   let f={'enabled':'Включено','id':'ID','name':'Имя','States':'Состояния'}
    let table = document.getElementById('devices');
    if (! table) {
       table = document.createElement('table');
@@ -71,7 +71,14 @@ console.log(d);
                }else{
                   r = '<input type="checkbox" data-id="'+i+'" onchange=ChangeDev(this)>';
                }
-
+               break;
+            case 'States':
+//               console.log();
+               if (d[i]['States']) {
+                  r=JSON.stringify(d[i]['States']);
+               } else {
+                  r='';
+               }
                break;
             default:
                r = d[i][k];
@@ -90,6 +97,34 @@ console.log(d);
 //      let v=d['devices'][k];
 //      AddBlok(v['id']+':'+v['name']);
 //   }
+}
+
+function Res_Processing(Res){
+   console.log(Res);
+}
+
+function apiGet_url(url){
+   let xhr = new XMLHttpRequest();
+   xhr.open('GET', url);
+   xhr.send();
+   xhr.onload = function() {
+      if (xhr.status == 200) {
+//         alert(`Готово, получили ${xhr.response.length} байт`);
+           Res_Processing(xhr.response);
+      } else { // если всё прошло гладко, выводим результат
+         console.log(`Ошибка ${xhr.status}: ${xhr.statusText}`); // Например, 404: Not Found
+      }
+   };
+   xhr.onprogress = function(event) {
+      if (event.lengthComputable) {
+         console.log(`Получено ${event.loaded} из ${event.total} байт`);
+      } else {
+         console.log(`Получено ${event.loaded} байт`); // если в ответе нет заголовка Content-Length
+      }
+   };
+   xhr.onerror = function() {
+      console.log("Запрос не удался");
+   };
 }
 
 function apiGet(){
@@ -116,7 +151,7 @@ function apiGet(){
    };
 }
 
-function apiSend(d,api){ console.log(d);
+function apiSend(d,api){ //console.log(d);
    if (typeof api == "undefined" ) { api = '/api/v2/devices';}
    let xhr = new XMLHttpRequest();
    let json = JSON.stringify(d);
