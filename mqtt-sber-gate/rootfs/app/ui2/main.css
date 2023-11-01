@@ -1,0 +1,22 @@
+﻿fa-trash:before{content:"\f1f8"}
+
+table {
+width: 100%;
+margin-bottom: 20px;
+border-collapse: collapse;
+}
+
+th {
+font-weight: bold;
+padding: 5px;
+background: #D0D0D0;
+border: 1px solid #dddddd;
+}
+td{
+padding: 5px 10px;
+border: 1px solid #eee;
+text-align: left;
+}
+
+tbody tr:nth-child(odd){ background: #fff; }
+tbody tr:nth-child(even){background: #E7E7E7;}

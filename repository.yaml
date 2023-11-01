@@ -1,0 +1,4 @@
+# https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
+name: MQTT-SberGate
+url: 'https://github.com/JanchEwgen/MQTT-SberGate'
+maintainer: Janch Ewgen <ewgen@janch.ru>

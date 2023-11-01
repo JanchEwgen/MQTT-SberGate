@@ -1,0 +1,64 @@
+{
+  "transformations": [
+    {
+      "name": "boolean_invert",
+      "help": "Инверсия",
+      "schema": "{}",
+      "ui_schema": ""
+    },
+    {
+      "name": "multiplication",
+      "help": "Умножение",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"Factor\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"Factor\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"title\": \"Множитель\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "type convert",
+      "help": "",
+      "schema": "{\n\t\t\t\"title\": \"Type convert\",\n\t\t\t\"description\": \"Преобразование типа значения\",\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t\t\"DomainType\",\n\t\t\t\t\"TargetType\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"DomainType\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Domain Type\",\n\t\t\t\t\"enum\": [\"STRING\", \"INTEGER\", \"BOOL\", \"FLOAT\"],\n\t\t\t\t\"default\": \"STRING\"\n\t\t\t  },\n\t\t\t  \"TargetType\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Target Type\",\n\t\t\t\t\"enum\": [\"STRING\", \"INTEGER\", \"BOOL\", \"FLOAT\"],\n\t\t\t\t\"default\": \"STRING\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "true_threshold",
+      "help": "Пороговое значение, включительно",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"Value\",\n\t\t\t  \"Operator\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"Value\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"title\": \"Значение\"\n\t\t\t  },\n\t\t\t  \"Operator\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Оператор\",\n\t\t\t\t\"enum\": [\"LESS\", \"MORE\"],\n\t\t\t\t\"default\": \"MORE\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "change_delay",
+      "help": "Аналог ignore_delay, но с отправкой последнего  полученного значения, по истечению заданного интервала (важно: трансформация должна быть в конце списка)",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"Value\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"Value\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Delay\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "integer_scale",
+      "help": "Целочисленное масштабирование",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"DomainMin\",\n\t\t\t  \"DomainMax\",\n\t\t\t  \"TargetMin\",\n\t\t\t  \"TargetMax\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"DomainMin\": {\n\t\t\t\t\"type\": \"integer\",\n\t\t\t\t\"title\": \"Доменный минимум\"\n\t\t\t  },\n\t\t\t  \"DomainMax\": {\n\t\t\t\t\"type\": \"integer\",\n\t\t\t\t\"title\": \"Доменный максимум\"\n\t\t\t  },\n\t\t\t  \"TargetMin\": {\n\t\t\t\t\"type\": \"integer\",\n\t\t\t\t\"title\": \"Целевой минимум\"\n\t\t\t  },\n\t\t\t  \"TargetMax\": {\n\t\t\t\t\"type\": \"integer\",\n\t\t\t\t\"title\": \"Целевой максимум\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "float_scale",
+      "help": "Масштабирование",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"DomainMin\",\n\t\t\t  \"DomainMax\",\n\t\t\t  \"TargetMin\",\n\t\t\t  \"TargetMax\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"DomainMin\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"title\": \"Доменный минимум\"\n\t\t\t  },\n\t\t\t  \"DomainMax\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"title\": \"Доменный максимум\"\n\t\t\t  },\n\t\t\t  \"TargetMin\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"title\": \"Целевой минимум\"\n\t\t\t  },\n\t\t\t  \"TargetMax\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"title\": \"Целевой максимум\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "mapping",
+      "help": "Преобразование типов с сопоставлением значений",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t\t\"DomainType\",\n\t\t\t\t\"TargetType\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"DomainType\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Доменный тип\",\n\t\t\t\t\"enum\": [\"STRING\", \"ENUM\", \"INTEGER\", \"BOOL\", \"FLOAT\", \"COLOUR\"],\n\t\t\t\t\"default\": \"STRING\"\n\t\t\t  },\n\t\t\t  \"TargetType\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Целевой тип\",\n\t\t\t\t\"enum\": [\"STRING\", \"ENUM\", \"INTEGER\", \"BOOL\", \"FLOAT\", \"COLOUR\"],\n\t\t\t\t\"default\": \"STRING\"\n\t\t\t  },\n\t\t\t  \"Rules\": {\n\t\t\t\t\"type\": \"object\",\n\t\t\t\t\"title\": \"Правила\",\n\t\t\t\t\"additionalProperties\": {\"type\": \"string\"}\n\t\t\t  },\n\t\t\t  \"DefaultDomainValue\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Доменное значение по умолчанию\"\n\t\t\t  },\n\t\t\t  \"DefaultTargetValue\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Целевое значение по умолчанию\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "counter_to_event",
+      "help": "Отправляет событие при изменении счётчика",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"Value\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"Value\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Доменное значение\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    },
+    {
+      "name": "ignore_delay",
+      "help": "Ограничивает отправку новых событий по времени.",
+      "schema": "{\n\t\t\t\"type\": \"object\",\n\t\t\t\"required\": [\n\t\t\t  \"Value\"\n\t\t\t],\n\t\t\t\"properties\": {\n\t\t\t  \"Value\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"title\": \"Delay\"\n\t\t\t  }\n\t\t\t}\n\t\t  }",
+      "ui_schema": ""
+    }
+  ]
+}
