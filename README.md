@@ -1,4 +1,4 @@
-﻿# MQTT-SberGate 1.0.5 (27.10.2023)
+﻿# MQTT-SberGate 1.0.6 (01.11.2023)
 ## MQTT SberGate SberDevice IoT Agent for Home Assistant
 
 Агент представляет собой прослойку между облаком Sber и HomeAssistant (HA).
