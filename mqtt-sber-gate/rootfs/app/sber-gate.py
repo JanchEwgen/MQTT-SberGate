@@ -5,6 +5,7 @@ import paho
 import sys
 import os
 import time
+from datetime import datetime
 import random
 import json
 import paho.mqtt.client as mqtt
@@ -18,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.6'
+VERSION = '1.0.7'
 
 #*******************************
 def json_read(f):
@@ -339,7 +340,9 @@ def on_global_conf(mqttc, obj, msg):
    options_change('sber-http_api_endpoint',data.get('http_api_endpoint',''))
 
 def log(s):
-   dt=time.strftime("%Y%m%d-%H%M%S", time.localtime())
+#   dt=time.strftime("%Y%m%d-%H%M%S.%f", time.localtime())[:-3]
+#   dt=datetime.utcnow().strftime("%Y%m%d-%H%M%S.%f")
+   dt=datetime.now().strftime("%Y%m%d-%H%M%S.%f")
    print(dt+': '+str(s))
 
 
@@ -411,10 +414,11 @@ sber_types={'FLOAT':'float_value','INTEGER':'integer_value','STRING':'string_val
 
 log('Start MQTT SberGate IoT Agent for Home Assistant version: '+VERSION)
 log("Запущено в системе: "+ os.name)
+log("Версия Python     : "+ sys.version)
 log("Размещение скрипта: "+ os.path.realpath(__file__))
 log("Текущая директория: "+ os.getcwd())
-log("Список файлов: "+  str(os.listdir('.')))
-#log("Список файлов2: "+  str(os.listdir('../app/data')))
+log("Список файлов     : "+  str(os.listdir('.')))
+#log("Список файлов2   : "+  str(os.listdir('../app/data')))
 
 log("Кодировка: "+ sys.getdefaultencoding())
 #log(": "+ sys.getfilesystemencoding())
@@ -536,8 +540,13 @@ log('SberDevice http_api_endpoint: '+Options['sber-http_api_endpoint'])
 hds = {'content-type': 'application/json'}
 if not os.path.exists('models.json'):
    log('Файл моделей отсутствует. Получаем...')
-   SD_Models = requests.get(Options['sber-http_api_endpoint']+'/v1/mqtt-gate/models', headers=hds,auth=(Options['sber-mqtt_login'], Options['sber-mqtt_password'])).json()
-   json_write('models.json',SD_Models)
+   SD_Models = requests.get(Options['sber-http_api_endpoint']+'/v1/mqtt-gate/models', headers=hds,auth=(Options['sber-mqtt_login'], Options['sber-mqtt_password']))
+   if SD_Models.status_code == 200:
+#      log(SD_Models.text)
+      json_write('models.json',SD_Models.json())
+   else:
+      log('ОШИБКА! Запрос models завершился с ошибкой: '+str(SD_Models.status_code))
+   
 
 if not os.path.exists('categories.json'):
    log('Файл категорий отсутствует. Получаем...')

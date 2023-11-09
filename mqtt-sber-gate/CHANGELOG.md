@@ -1,4 +1,8 @@
-<!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
+
+## 1.0.7 (09.11.2023)
+- Добавлены милисекунды в log
+- Добавлены проверки при скачивании models.json
+- Мелкие правки, новые косяки
 
 ## 1.0.6 (01.11.2023)
 - Обновлен оригинальный веб-интерфейс SberDevices от платформы WirenBoard
