@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.7'
+VERSION = '1.0.8'
 
 #*******************************
 def json_read(f):
