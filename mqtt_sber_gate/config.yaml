@@ -1,9 +1,10 @@
+---
 name: "MQTT SberGate"
 version: "1.0.7"
+slug: "mqtt-sber-gate"
 description: "MQTT SberGate SberDevice IoT Agent for Home Assistant"
 url: "https://github.com/JanchEwgen/MQTT-SberGate"
 webui: "http://[HOST]:[PORT:9123]"
-slug: "mqtt-sber-gate"
 
 init: false
 arch:
@@ -28,6 +29,7 @@ options:
   sber-mqtt_login: "mqtt-sber-login"
   sber-mqtt_password: "mqtt-sber-password"
   sber-http_api_endpoint: "https://mqtt-partners.iot.sberdevices.ru"
+  log_level: info
 
 schema:
   ha-api_url: str
@@ -37,3 +39,4 @@ schema:
   sber-mqtt_login: str
   sber-mqtt_password: password
   sber-http_api_endpoint: str?
+  log_level: list(trace|debug|info|notice|warning|error|fatal)
