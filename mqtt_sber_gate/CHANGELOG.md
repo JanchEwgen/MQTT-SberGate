@@ -1,7 +1,14 @@
-﻿## 1.0.8 (14.11.2023)
+﻿## 1.0.9 (15.11.2023)
+- Автостарт при перезагрузке HA не работал по причине неготовности HA отвечать в момент
+  запуска агента. Добавлена задержка и ожидание готовности HA.
+- Изменена кодировка файлов CHANGELOG.md и DOCS.md на UTF-8 
+из-за чего падал сервер при запросе списка изменений
+ERROR (MainThread) [homeassistant.components.hassio.handler] /addons/0f4b1db7_mqtt-sber-gate/changelog return code 500
+WARNING (MainThread) [homeassistant.components.hassio] Could not fetch changelog for 0f4b1db7_mqtt-sber-gate:
+
+## 1.0.8 (14.11.2023)
 - Попытка исправить ошибку загрузки списка изменений.
   Возможно автостарт не работает именно по этой причине.
-
 
 ## 1.0.7 (09.11.2023)
 - Добавлены милисекунды в log

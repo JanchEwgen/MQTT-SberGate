@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.8'
+VERSION = '1.0.9'
 
 #*******************************
 def json_read(f):
@@ -446,7 +446,14 @@ AgentStatus={"online": True, "error": "",  "credentials": {'username':Options['s
 #url = "http://localhost:8123/ENDPOINT"
 hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
 url=Options['ha-api_url']+'/api/states'
-res = requests.get(url, headers=hds)
+cx=0
+while cx<10:
+   cx = cx+1
+   try:
+      res = requests.get(url, headers=hds)
+   except:
+      log('Ошибка подключения к HA. Ждём 5 сек перед повторным подключением.')
+      time.sleep(5)
 
 if res.status_code == 200:
    log('Запрос устройств из Home Assistant выполнен штатно.')
