@@ -651,20 +651,29 @@ if not os.path.exists('models.json'):
    else:
       log('ОШИБКА! Запрос models завершился с ошибкой: '+str(SD_Models.status_code))
    
+def GetCategory():
+   if not os.path.exists(fCategories):
+      log('Файл категорий отсутствует. Получаем...')
+      Categories={}
+      SD_Categories = requests.get(Options['sber-http_api_endpoint']+'/v1/mqtt-gate/categories', headers=hds,auth=(Options['sber-mqtt_login'], Options['sber-mqtt_password'])).json()
+      for id in SD_Categories['categories']:
+         log('Получаем опции для котегории: '+id)
+         SD_Features = requests.get(Options['sber-http_api_endpoint']+'/v1/mqtt-gate/categories/'+id+'/features', headers=hds,auth=(Options['sber-mqtt_login'], Options['sber-mqtt_password'])).json()
+         Categories[id]=SD_Features['features']
+   #   log(Categories)
+      json_write('categories.json',Categories)
+   else:
+      log('Список категорий получен из файла: ' + fCategories)
+      Categories=json_read(fCategories)
+   return Categories
 
-if not os.path.exists(fCategories):
-   log('Файл категорий отсутствует. Получаем...')
-   Categories={}
-   SD_Categories = requests.get(Options['sber-http_api_endpoint']+'/v1/mqtt-gate/categories', headers=hds,auth=(Options['sber-mqtt_login'], Options['sber-mqtt_password'])).json()
-   for id in SD_Categories['categories']:
-      log('Получаем опции для котегории: '+id)
-      SD_Features = requests.get(Options['sber-http_api_endpoint']+'/v1/mqtt-gate/categories/'+id+'/features', headers=hds,auth=(Options['sber-mqtt_login'], Options['sber-mqtt_password'])).json()
-      Categories[id]=SD_Features['features']
-#   log(Categories)
-   json_write('categories.json',Categories)
-else:
-   log('Список категорий получен из файла: ' + fCategories)
-   Categories=json_read(fCategories)
+Categories=GetCategory()
+
+if Categories.get('categories',False):
+   log('Старая версия файла категорий, удаляем.')
+   os.remove(fCategories)
+   log('Повторное получения категорий.')
+   Categories=GetCategory()
 
 #Получаем список категорий в формате Сбер API для возврата по запросу
 resCategories={'categories':[]}
