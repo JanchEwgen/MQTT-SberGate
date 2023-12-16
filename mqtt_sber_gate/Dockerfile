@@ -8,10 +8,7 @@ FROM $BUILD_FROM
 RUN \
   apk add --no-cache \
     py3-pip \
-    python3 \
- && pip3 install \
-    requests \
-    websocket-client
+    python3
 
 # Python 3 HTTP Server serves the current working dir
 # So let's set it to our add-on persistent data directory.

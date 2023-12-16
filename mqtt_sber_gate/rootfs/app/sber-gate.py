@@ -12,6 +12,7 @@ import random
 import requests
 import websocket
 import threading
+# deprecated import pkg_resources
 import paho.mqtt.client as mqtt
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -19,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.10'
+VERSION = '1.0.11'
 LOG_LEVEL_LIST={'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
 log_level = 3
 
@@ -518,6 +519,14 @@ log("Log Level         : "+  Options.get('log_level','info'))
 #log(": "+ sys.getfilesystemencoding())
 #log(": "+ sys.getfilesystemencodeerrors())
 #log(": "+ str(sys.maxunicode))
+
+
+#installed_packages = pkg_resources.working_set
+#installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
+#pkg=[]
+#for i in pkg_resources.working_set:
+#   pkg.append(i.key)
+#log(pkg)
 
 #sys.setdefaultencoding('utf8')
 #print(sys.stdout.encoding)
