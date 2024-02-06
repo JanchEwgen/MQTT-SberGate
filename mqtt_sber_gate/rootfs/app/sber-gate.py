@@ -20,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.11'
+VERSION = '1.0.12'
 LOG_LEVEL_LIST={'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
 log_level = 3
 
@@ -165,6 +165,9 @@ class CDevicesDB(object):
          self.DB[id]={}
          for k,v in fl.items():
             self.DB[id][k]=d.get(k,v)
+         if d['category'] == 'scenario_button':
+            self.DB[id]['States'] = {'button_event':''}
+
       for k,v in d.items():
          self.DB[id][k]=d.get(k,v)
       if (self.DB[id]['name'] == ''):
@@ -190,6 +193,13 @@ class CDevicesDB(object):
          v=round(s.get('temperature',0)*10)
          r.append({'key':'online','value':{"type": "BOOL", "bool_value": True}})
          r.append({'key':'temperature','value':{"type": "INTEGER", "integer_value": v}})
+
+      if d['category'] == 'scenario_button':
+         v=s.get('button_event','click')
+         r.append({'key':'online','value':{"type": "BOOL", "bool_value": True}})
+         r.append({'key':'button_event','value':{"type": "ENUM", "enum_value": v}})
+
+
       if d['category'] == 'hvac_radiator':
 #         log('hvac')
          v=round(s.get('temperature',0)*10)
@@ -276,6 +286,8 @@ class CDevicesDB(object):
          r={'key':feature['name'],'value':{'type': 'BOOL', 'bool_value': bool(State)}}
       if feature['data_type'] == 'INTEGER':
          r={'key':feature['name'],'value':{'type': 'INTEGER', 'integer_value': int(State)}}
+      if feature['data_type'] == 'ENUM':
+         r={'key':feature['name'],'value':{'type': 'ENUM', 'enum_value': State}}
       log(id+': '+str(r))
       return r
 
@@ -306,6 +318,9 @@ class CDevicesDB(object):
                         self.DB[id]['States'][ft['name']]=self.DefaultValue(ft)
                   if not (self.DB[id]['States'].get(ft['name'], None) is None):
                      r.append(self.StateValue(id,ft))
+                     if ft['name'] == 'button_event':
+                        self.DB[id]['States']['button_event']=''
+
                DStat['devices'][id]['states']=r
 
 #               if (s is None):
@@ -476,11 +491,14 @@ def ws_event(ws,msg):
          log('HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
          if dev['category'] == 'sensor_temp':
             DevicesDB.change_state(id,'temperature',float(new_state))
-#         if dev['category'] == 'relay':
          if new_state == 'on':
             DevicesDB.change_state(id,'on_off',True)
+            if not (DevicesDB.DB[id]['States'].get('button_event',None) is None):
+               DevicesDB.DB[id]['States']['button_event']='click'
          else:
             DevicesDB.change_state(id,'on_off',False)
+            if not (DevicesDB.DB[id]['States'].get('button_event',None) is None):
+               DevicesDB.DB[id]['States']['button_event']='double_click'
          send_status(mqttc,DevicesDB.do_mqtt_json_states_list([id]))
       else:
          log('!HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
@@ -563,7 +581,7 @@ else:
    ha_dev=[]
    log('Запрошенный URL: ' + url)
    log('Код ответа сервера: ' + str(res.status_code))
-
+   #Нет смысла продолжать выполнение
 
 def upd_sw(id,s):
    attr=s['attributes'].get('friendly_name','')
@@ -584,6 +602,13 @@ def upd_sensor(id,s):
    if dc == 'temperature':
 #      log('Сенсор температуры: ' + id + ' ' + fn)
       DevicesDB.update(id,{'entity_ha': True,'entity_type': 'sensor_temp', 'friendly_name': fn,'category': 'sensor_temp'})
+
+def upd_input_boolean(id,s):
+   dc=s['attributes'].get('device_class','')
+   fn=s['attributes'].get('friendly_name','')
+   log('input_boolean: ' + s['entity_id'] + ' '+fn+'('+dc+')',0)
+   DevicesDB.update(id,{'entity_ha': True,'entity_type': 'input_boolean', 'friendly_name': fn,'category': 'scenario_button'})
+
 def upd_hvac_radiator(id,s):
    dc=s['attributes'].get('device_class','')
    fn=s['attributes'].get('friendly_name','')
@@ -602,6 +627,7 @@ for s in ha_dev:
       'light': upd_light,
       'script': upd_scr,
       'sensor': upd_sensor,
+      'input_boolean': upd_input_boolean,
       'hvac_radiator': upd_hvac_radiator
    }
    dict.get(a, upd_default)(s['entity_id'],s)
