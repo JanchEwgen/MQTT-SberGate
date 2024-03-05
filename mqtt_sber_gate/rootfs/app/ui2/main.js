@@ -1,6 +1,7 @@
 function Init(){
-   AddBlok('<h1>SberGate version: 1.0.12</h1>')
+   AddBlok('<h1>SberGate version: 1.0.13</h1>')
    AddBlok('<a href="index.html">Перейти к настройкам СберАгента</a></p>')
+   AddBlok('<a href="SberGate.log">Скачать SberGate.log</a></p>')
    AddBlok('<h2>Команды:</h2>')
 //   AddBlok('<button class="btn">&#128465; Удалить</button>')
    AddBlok('<button id="DB_delete" onclick="RunCmd(this.id)">   &#128465; Удалить базу устройств</button><button id="exit" onclick="RunCmd(this.id)">Выход</button>')

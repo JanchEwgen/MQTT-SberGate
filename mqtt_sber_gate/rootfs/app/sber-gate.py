@@ -20,8 +20,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.12'
+VERSION = '1.0.13'
 LOG_LEVEL_LIST={'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
+LOG_FILE = 'SberGate.log'
+LOG_FILE_MAX_SIZE = 1024*1024
 log_level = 3
 
 #*******************************
@@ -438,20 +440,22 @@ def on_global_conf(mqttc, obj, msg):
    options_change('sber-http_api_endpoint',data.get('http_api_endpoint',''))
 
 def log(s,l=3):
+   out_file = open("SberGate.log", "a")
+
 #   log_lv=LOG_LEVEL_LIST.get(l,2)
    if l >= log_level:
-      dt=datetime.now().strftime("%Y%m%d-%H%M%S.%f")
-      print(dt+': '+str(s))
+      dt=datetime.now().strftime("%Y%m%d-%H%M%S.%f")+': '+str(s)
+      print(dt)
+      out_file.write(dt+'\r\n')
 
 #   dt=time.strftime("%Y%m%d-%H%M%S.%f", time.localtime())[:-3]
 #   dt=datetime.utcnow().strftime("%Y%m%d-%H%M%S.%f")
-
+   out_file.close()
 
 #vvvvvvv WebSocket vvvvvvv
 
 def ws_on_open(ws):
    log("WebSocket: opened",3)
-   ws.send(json.dumps({"type": "auth", "access_token": Options['ha-api_token']}))
 
 def ws_on_close(ws,a,b):
    log("WebSocket: Connection closed")
@@ -523,21 +527,23 @@ log_level = LOG_LEVEL_LIST.get(Options.get('log_level','info'),3)
 #https://developers.sber.ru/docs/ru/smarthome/c2c/value
 sber_types={'FLOAT':'float_value','INTEGER':'integer_value','STRING':'string_value','BOOL':'bool_value','ENUM':'enum_value','JSON':'','COLOUR':'colour_value'}
 #
-
+if os.path.isfile(LOG_FILE):
+   if os.path.getsize(LOG_FILE)>LOG_FILE_MAX_SIZE:
+      os.remove(LOG_FILE)
 log('Start MQTT SberGate IoT Agent for Home Assistant version: '+VERSION)
 log("Запущено в системе: "+ os.name)
 log("Версия Python     : "+ sys.version)
 log("Размещение скрипта: "+ os.path.realpath(__file__))
 log("Текущая директория: "+ os.getcwd())
-log("Список файлов     : "+  str(os.listdir('.')))
-#log("Список файлов2   : "+  str(os.listdir('../app/data')))
+log("Размер Log файла  : "+ str(os.path.getsize(LOG_FILE)))
+log("Log Level         : "+ Options.get('log_level','info'))
+#log("LOG_FILE_MAX_SIZE : "+ str(LOG_FILE_MAX_SIZE)
 log("Кодировка         : "+ sys.getdefaultencoding())
-log("Log Level         : "+  Options.get('log_level','info'))
-
+log("Список файлов     : "+ str(os.listdir('.')))
+#log("Список файлов2   : "+ str(os.listdir('../app/data')))
 #log(": "+ sys.getfilesystemencoding())
 #log(": "+ sys.getfilesystemencodeerrors())
 #log(": "+ str(sys.maxunicode))
-
 
 #installed_packages = pkg_resources.working_set
 #installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
@@ -930,12 +936,14 @@ ext_mime_types = {
    ".png" : "image/png",
    ".json" : "application/json",
    ".ico" : "image/vnd.microsoft.icon",
+   ".log" : "application/octet-stream",
    "default" : "text/plain"
 }
 
 static_request={
 #   '/api/v1/models': 'models.json',
 #   '/api/v1/categories': 'categories.json',
+   '/SberGate.log': 'SberGate.log',
    '/': '../app/ui2/index.html',
    '/ui2/main.js': '../app/ui2/main.js',
    '/ui2/main.css': '../app/ui2/main.css',
