@@ -20,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.13'
+VERSION = '1.0.14'
 LOG_LEVEL_LIST={'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
 LOG_FILE = 'SberGate.log'
 LOG_FILE_MAX_SIZE = 1024*1024
