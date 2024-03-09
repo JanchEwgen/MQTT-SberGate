@@ -1,5 +1,5 @@
 function Init(){
-   AddBlok('<h1>SberGate version: 1.0.14</h1>')
+   AddBlok('<h1>SberGate version: 1.0.15</h1>')
    AddBlok('<a href="index.html">Перейти к настройкам СберАгента</a></p>')
    AddBlok('<a href="SberGate.log">Скачать SberGate.log</a></p>')
    AddBlok('<h2>Команды:</h2>')
@@ -38,7 +38,7 @@ function ChangeDev(d){
 
 function UpdateDeviceList(d){
 //console.log(d);
-   let f={'enabled':'Включено','id':'ID','name':'Имя','States':'Состояния'}
+   let f={'enabled':'Включено','home':'Дом','room':'Комната','id':'ID','name':'Имя','States':'Состояния'}
    let table = document.getElementById('devices');
    if (! table) {
       table = document.createElement('table');

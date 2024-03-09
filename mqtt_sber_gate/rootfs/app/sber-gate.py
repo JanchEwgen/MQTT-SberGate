@@ -20,11 +20,16 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.14'
-LOG_LEVEL_LIST={'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
+VERSION = '1.0.15'
+LOG_LEVEL_LIST={'deeptrace':0,'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
 LOG_FILE = 'SberGate.log'
-LOG_FILE_MAX_SIZE = 1024*1024
+LOG_FILE_MAX_SIZE = 1024*1024*7
 log_level = 3
+HA_AREA = {}
+
+fOptions='options.json'
+fDevicesDB='devices.json'
+fCategories='categories.json'
 
 #*******************************
 def json_read(f):
@@ -157,8 +162,14 @@ class CDevicesDB(object):
       if k:
          return k
 
+   def update_only(self,id,d):
+      if (self.DB.get(id,None) is not None):
+         for k,v in d.items():
+            self.DB[id][k]=d.get(k,v)
+         self.save_DB()
+
    def update(self,id,d):
-      fl={'enabled':False,'name':'','default_name':'','nicknames':[],'home':'','room':'','groups':[],'model_id':'','category':'','hw_version':'','sw_version':''}
+      fl={'enabled':False,'name':'','default_name':'','nicknames':[],'home':'','room':'','groups':[],'model_id':'','category':'','hw_version':VERSION,'sw_version':VERSION}
       fl['entity_ha']=False
       fl['entity_type']=''
       fl['friendly_name']=''
@@ -226,23 +237,18 @@ class CDevicesDB(object):
       return r
 
    def do_mqtt_json_devices_list(self):
-#      log('do_mqtt_json_devices_list')
-      model_dict = {
-         'relay':       {'id': 'model_relay', 'manufacturer': 'Janch', 'model': 'Relay', 'category': 'relay', 'features': ['online','on_off']},
-         'sensor_temp': {'id': 'sensor_temp', 'manufacturer': 'Janch', 'model': 'sensor_temp', 'category': 'sensor_temp', 'features': ['online', 'temperature']},
-         'hvac_radiator': {'id': 'hvac_radiator', 'manufacturer': 'Janch', 'model': 'hvac_radiator', 'category': 'hvac_radiator', 'features': ['online','on_off', 'temperature', 'hvac_temp_set']},
-
-         'ipc': {'id': 'model_ipc', 'manufacturer': 'Janch', 'model': 'IPC', 'category': 'ipc', 'features': ['online','on_off']}
-      }
       Dev={}
       Dev['devices']=[]
+      Dev['devices'].append({"id": "root", "name": "Вумный контроллер", 'hw_version':VERSION, 'sw_version':VERSION })
+      Dev['devices'][0]['model']={'id': 'ID_root_hub', 'manufacturer': 'Janch', 'model': 'VHub', 'description': "HA MQTT SberGate HUB", 'category': 'hub', 'features': ['online']}
       for k,v in self.DB.items():
          if v.get('enabled',False):
-            d={}
-            d['id']=k
-            d['name']=v.get('name','')
-            d['default_name']=v.get('default_name','')
-#            d['model']=model_dict.get(v.get('category',''), model_dict['relay'])
+            d={'id': k, 'name': v.get('name',''), 'default_name': v.get('default_name','')}
+            d['home']=v.get('home','Мой дом')
+            d['room']=v.get('room','')
+#            d['groups']=['Спальня']
+            d['hw_version']=VERSION
+            d['sw_version']=VERSION
             dev_cat=v.get('category','relay')
             c=Categories.get(dev_cat)
             f=[]
@@ -259,7 +265,7 @@ class CDevicesDB(object):
             d['model_id']=''
             Dev['devices'].append(d)
       self.mqtt_json_devices_list=json.dumps(Dev)
-#      log('New Devices List for MQTT: '+self.mqtt_json_devices_list)
+      log('New Devices List for MQTT: '+self.mqtt_json_devices_list,1)
       return self.mqtt_json_devices_list
 
    def DefaultValue(self,feature):
@@ -290,15 +296,14 @@ class CDevicesDB(object):
          r={'key':feature['name'],'value':{'type': 'INTEGER', 'integer_value': int(State)}}
       if feature['data_type'] == 'ENUM':
          r={'key':feature['name'],'value':{'type': 'ENUM', 'enum_value': State}}
-      log(id+': '+str(r))
+      log(id+': '+str(r),0)
       return r
 
    def do_mqtt_json_states_list(self,dl):
-#      print('do_mqtt_json_states_list')
-      if (len(dl) == 0):
-         dl=self.DB.keys()
       DStat={}
       DStat['devices']={}
+      if (len(dl) == 0):
+         dl=self.DB.keys()
       for id in dl:
          device=self.DB.get(id,None)
          if not (device is None):
@@ -322,15 +327,17 @@ class CDevicesDB(object):
                      r.append(self.StateValue(id,ft))
                      if ft['name'] == 'button_event':
                         self.DB[id]['States']['button_event']=''
-
                DStat['devices'][id]['states']=r
-
 #               if (s is None):
 #                  log('У объекта: '+id+'отсутствует информация о состояниях')
 #                  self.DB[id]['States']={}
 #                  self.DB[id]['States']['online']=True
 #               DStat['devices'][id]['states']=self.DeviceStates_mqttSber(id)
+
+      if (len(DStat['devices']) == 0):
+            DStat['devices']={"root": {"states": [{"key": "online", "value": {"type": "BOOL", "bool_value": True}}]}}
       self.mqtt_json_states_list=json.dumps(DStat)
+      log(f"Отправка состояний в Sber: {self.mqtt_json_states_list}",1)
       return self.mqtt_json_states_list
 
    def do_http_json_devices_list(self):
@@ -426,8 +433,7 @@ def on_message_stat(mqttc, obj, msg):
    data=json.loads(msg.payload).get('devices',[])
    log("GetStatus: "  +  str(msg.payload))
    send_status(mqttc,DevicesDB.do_mqtt_json_states_list(data))
-#   log("Answer: "+DevicesDB.mqtt_json_states_list)
-
+   log("Answer: "+DevicesDB.mqtt_json_states_list,0)
 
 def on_errors(mqttc, obj, msg):
    log("Sber MQTT Errors: " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
@@ -440,7 +446,7 @@ def on_global_conf(mqttc, obj, msg):
    options_change('sber-http_api_endpoint',data.get('http_api_endpoint',''))
 
 def log(s,l=3):
-   out_file = open("SberGate.log", "a")
+   out_file = open(LOG_FILE, "a", encoding="utf-8")
 
 #   log_lv=LOG_LEVEL_LIST.get(l,2)
    if l >= log_level:
@@ -470,21 +476,46 @@ def ws_on_message(ws, message):
       'event': ws_event,
       'None': ws_default
    }
-   ws_dict.get(mdata.get('type', 'None'), ws_default )(ws,message)
+   ws_dict.get(mdata.get('type', 'None'), ws_default )(ws,mdata)
 
-def ws_auth_required(ws,msg):
+def ws_auth_required(ws,mdata):
    log("WebSocket: auth_required")
    ws.send(json.dumps({"type": "auth", "access_token": Options['ha-api_token']}))
-def ws_auth_ok(ws,msg):
+def ws_auth_ok(ws,mdata):
    log("WebSocket: auth_ok")
    ws.send(json.dumps({'id': 1, 'type': 'subscribe_events', 'event_type': 'state_changed'}))
-def ws_auth_invalid(ws,msg):
+   ws.send(json.dumps({'id': 2, 'type': 'config/area_registry/list'}))
+#   ws.send(json.dumps({'id': 3, 'type': 'config/device_registry/list'}))
+   ws.send(json.dumps({'id': 4, 'type': 'config/entity_registry/list'}))
+
+def ws_auth_invalid(ws,mdata):
    log("WebSocket: auth_invalid",7)
-def ws_result(ws,msg):
-   log("WebSocket: result")
-def ws_event(ws,msg):
+def ws_result(ws,mdata):
+   global HA_AREA
+   log(f"WebSocket: result: {mdata}",0)
+   if mdata.get('id', 'None') == 2:
+      log(f"WebSocket: Получен список зон: {mdata}",0)
+      HA_AREA = {}
+      for a in mdata.get('result',[]):
+         HA_AREA[a['area_id']]=a['name']
+      log(f"HA_AREA: {HA_AREA}",1)
+         
+   if mdata.get('id', 'None') == 4:
+      log(f"WebSocket: Получен список сущностей.")
+      log(f"Данные: {mdata}",0)
+      res=mdata.get('result',[])
+      for a in res:
+         entity=DevicesDB.DB.get(a['entity_id'],False)
+#         log(f"entity list: {a['entity_id']}")
+         if entity:
+            room=HA_AREA.get(a['area_id'],'')
+            room_db=DevicesDB.DB[a['entity_id']].get('room',False)
+            if room_db != room:
+               log(f"Изменилось расположение сущности {a['entity_id']} с {room_db} на {room}")
+               DevicesDB.update_only(a['entity_id'],{'entity_ha': True,'room': room})
+
+def ws_event(ws,mdata):
 #   log("vvv WebSocket: event vvv",0)
-   mdata=json.loads(msg)
    id=mdata['event']['data']['new_state']['entity_id']
    old_state=mdata['event']['data']['old_state']['state']
    new_state=mdata['event']['data']['new_state']['state']
@@ -506,20 +537,16 @@ def ws_event(ws,msg):
          send_status(mqttc,DevicesDB.do_mqtt_json_states_list([id]))
       else:
          log('!HA Event: ' + id + ': ' + old_state + ' -> ' + new_state)
-
 #   else:
 #      print(id+' нет в базе')
 #   log("^^^ WebSocket: event ^^^",0)
 
-def ws_default(ws,msg):
+def ws_default(ws,mdata):
    log("WebSocket: default")
 
 #^^^^^^^ WebSocket ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #********** Start **********************************
-fOptions='options.json'
-fDevicesDB='devices.json'
-fCategories='categories.json'
 
 Options=json_read(fOptions)
 log_level = LOG_LEVEL_LIST.get(Options.get('log_level','info'),3)
