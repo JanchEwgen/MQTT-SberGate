@@ -58,14 +58,14 @@ git clone https://github.com/JanchEwgen/MQTT-SberGate/tree/main
 
 Собираем образ под текущую версию
 ```
-docker --debug build -t mqttsbergate:1.0.5 --build-arg BUILD_version=1.0.5 --build-arg BUILD_FROM=python:3.12 --build-arg BUILD_REF=mqttsber1 .
+docker --debug build -t mqttsbergate:1.0.15 --build-arg BUILD_version=1.0.15 --build-arg BUILD_FROM=python:3.12 --build-arg BUILD_REF=mqttsber1 .
 ```
 Используем следующее для DockerCompose.yaml (portainer или ваш способ на выбор через docker-compose-up например)
 ```
 services:
   mqttsbergate:
     container_name: mqttsbergate
-    image: mqttsbergate:1.0.5
+    image: mqttsbergate:1.0.15
     network_mode: host
     ports:
       - "9123:9123"
@@ -78,7 +78,7 @@ services:
       options:
         max-size: 10m
 ```
-Где - /DATA/AppData/mqttsbergate папка на хосте в которую нужно будет поместить файл options.json
+Где - /DATA/AppData/mqttsbergate папка на хосте в которой будет создан options.json, его нужно будет предзаполнить своими параметрами и рестартовать контейнер
 
 ## Ссылки.
 
