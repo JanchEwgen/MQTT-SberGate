@@ -53,9 +53,11 @@
 ## Сборка докера.
 Скачиваем репозиторий через GIT, идём в папку где находится Dockerfile
 Собираем образ под текущую версию
+```
 docker --debug build -t mqttsbergate:1.0.5 --build-arg BUILD_version=1.0.5 --build-arg BUILD_FROM=python:3.12 --build-arg BUILD_REF=mqttsber1 .
-
+```
 Используем следующее для DockerCompose.yaml (portainer или ваш способ на выбор через docker-compose-up например)
+```
 services:
   mqttsbergate:
     container_name: mqttsbergate
@@ -71,7 +73,7 @@ services:
     logging:
       options:
         max-size: 10m
-
+```
 ## Ссылки.
 
 Для работы с MQTT используется [Eclipse Paho™ MQTT Python Client](https://github.com/eclipse/paho.mqtt.python)
