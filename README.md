@@ -52,6 +52,10 @@
 
 ## Сборка докера.
 Скачиваем репозиторий через GIT, идём в папку где находится Dockerfile
+```
+git clone https://github.com/JanchEwgen/MQTT-SberGate/tree/main
+```
+
 Собираем образ под текущую версию
 ```
 docker --debug build -t mqttsbergate:1.0.5 --build-arg BUILD_version=1.0.5 --build-arg BUILD_FROM=python:3.12 --build-arg BUILD_REF=mqttsber1 .
