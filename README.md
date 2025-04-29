@@ -50,6 +50,28 @@
 Теперь стало возможно сказать ассистенту: "Включи камеру на улице". После чего отрабатывает скрипт HA который отправляет в VLC нужный поток.
 Попытки прокинуть script как камеру не увенчались успехом, даже писал в поддержку. Получил ответ, что-то вроде "пока не реализовано".
 
+## Сборка докера.
+Скачиваем репозиторий через GIT, идём в папку где находится Dockerfile
+Собираем образ под текущую версию
+docker --debug build -t mqttsbergate:1.0.5 --build-arg BUILD_version=1.0.5 --build-arg BUILD_FROM=python:3.12 --build-arg BUILD_REF=mqttsber1 .
+
+Используем следующее для DockerCompose.yaml (portainer или ваш способ на выбор через docker-compose-up например)
+services:
+  mqttsbergate:
+    container_name: mqttsbergate
+    image: mqttsbergate:1.0.5
+    network_mode: host
+    ports:
+      - "9123:9123"
+    expose:
+      - "9123"
+    volumes:
+      - /DATA/AppData/salutebridge:/data
+    restart: always
+    logging:
+      options:
+        max-size: 10m
+
 ## Ссылки.
 
 Для работы с MQTT используется [Eclipse Paho™ MQTT Python Client](https://github.com/eclipse/paho.mqtt.python)
