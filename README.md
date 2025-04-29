@@ -72,12 +72,14 @@ services:
     expose:
       - "9123"
     volumes:
-      - /DATA/AppData/salutebridge:/data
+      - /DATA/AppData/mqttsbergate:/data
     restart: always
     logging:
       options:
         max-size: 10m
 ```
+Где - /DATA/AppData/mqttsbergate папка на хосте в которую нужно будет поместить файл options.json
+
 ## Ссылки.
 
 Для работы с MQTT используется [Eclipse Paho™ MQTT Python Client](https://github.com/eclipse/paho.mqtt.python)
