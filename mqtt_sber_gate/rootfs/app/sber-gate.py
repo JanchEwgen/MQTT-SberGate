@@ -20,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 #import locale
 #locale.getpreferredencoding()
 
-VERSION = '1.0.15'
+VERSION = '1.0.16'
 LOG_LEVEL_LIST={'deeptrace':0,'trace':1,'debug':2,'info':3,'notice':4,'warning':5,'error':6,'fatal':7}
 LOG_FILE = 'SberGate.log'
 LOG_FILE_MAX_SIZE = 1024*1024*7
@@ -60,10 +60,13 @@ def ha_OnOff(id):
    entity_domain,entity_name=id.split('.',1)
    log('Отправляем команду в HA для '+id+' ON: '+str(OnOff))
    url=Options['ha-api_url']+'/api/services/'+entity_domain+'/'
-   if OnOff:
-      url += 'turn_on'
+   if entity_domain == 'button':
+      url += 'press'
    else:
-      url += 'turn_off'
+      if OnOff:
+         url += 'turn_on'
+      else:
+         url += 'turn_off'
    log('HA REST API REQUEST: '+ url)
    hds = {'Authorization': 'Bearer '+Options['ha-api_token'], 'content-type': 'application/json'}
    response=requests.post(url, json={"entity_id": id}, headers=hds)
@@ -169,7 +172,7 @@ class CDevicesDB(object):
          self.save_DB()
 
    def update(self,id,d):
-      fl={'enabled':False,'name':'','default_name':'','nicknames':[],'home':'','room':'','groups':[],'model_id':'','category':'','hw_version':VERSION,'sw_version':VERSION}
+      fl={'enabled':False,'name':'','default_name':'','nicknames':[],'home':'','room':'','groups':[],'model_id':'','category':'','hw_version':'hw:'+VERSION,'sw_version':'sw:'+VERSION}
       fl['entity_ha']=False
       fl['entity_type']=''
       fl['friendly_name']=''
@@ -247,8 +250,8 @@ class CDevicesDB(object):
             d['home']=v.get('home','Мой дом')
             d['room']=v.get('room','')
 #            d['groups']=['Спальня']
-            d['hw_version']=VERSION
-            d['sw_version']=VERSION
+            d['hw_version']=v.get('hw_version','')
+            d['sw_version']=v.get('sw_version','')
             dev_cat=v.get('category','relay')
             c=Categories.get(dev_cat)
             f=[]
@@ -430,7 +433,10 @@ def on_message_cmd(mqttc, obj, msg):
 #   log(DevicesDB.mqtt_json_states_list)
 
 def on_message_stat(mqttc, obj, msg):
-   data=json.loads(msg.payload).get('devices',[])
+   try:
+      data=json.loads(msg.payload).get('devices',[])
+   except:
+      data=[]
    log("GetStatus: "  +  str(msg.payload))
    send_status(mqttc,DevicesDB.do_mqtt_json_states_list(data))
    log("Answer: "+DevicesDB.mqtt_json_states_list,0)
@@ -440,6 +446,8 @@ def on_errors(mqttc, obj, msg):
 
 def on_message_conf(mqttc, obj, msg):
    log("Config: " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+   infot = mqttc.publish(sber_root_topic+'/up/config', DevicesDB.do_mqtt_json_devices_list(), qos=0)
+#!!!!!!!
 
 def on_global_conf(mqttc, obj, msg):
    data=json.loads(msg.payload)
@@ -616,6 +624,7 @@ else:
    log('Код ответа сервера: ' + str(res.status_code))
    #Нет смысла продолжать выполнение
 
+
 def upd_sw(id,s):
    attr=s['attributes'].get('friendly_name','')
    log('switch: ' + s['entity_id'] + ' '+attr,0)
@@ -635,6 +644,15 @@ def upd_sensor(id,s):
    if dc == 'temperature':
 #      log('Сенсор температуры: ' + id + ' ' + fn)
       DevicesDB.update(id,{'entity_ha': True,'entity_type': 'sensor_temp', 'friendly_name': fn,'category': 'sensor_temp'})
+#   if dc == 'pressure':
+#      DevicesDB.update(id,{'entity_ha': True,'entity_type': 'sensor_pressure', 'friendly_name': fn,'category': 'sensor_pressure'})
+
+
+def upd_button(id,s):
+   dc=s['attributes'].get('device_class','')
+   fn=s['attributes'].get('friendly_name','')
+   log('button: ' + s['entity_id'] + ' '+fn+'('+dc+')',0)
+   DevicesDB.update(id,{'entity_ha': True,'entity_type': 'button', 'friendly_name': fn,'category': 'relay'})
 
 def upd_input_boolean(id,s):
    dc=s['attributes'].get('device_class','')
@@ -660,6 +678,7 @@ for s in ha_dev:
       'light': upd_light,
       'script': upd_scr,
       'sensor': upd_sensor,
+      'button': upd_button,
       'input_boolean': upd_input_boolean,
       'hvac_radiator': upd_hvac_radiator
    }

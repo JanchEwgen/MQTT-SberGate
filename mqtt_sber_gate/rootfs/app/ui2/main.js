@@ -1,5 +1,5 @@
 function Init(){
-   AddBlok('<h1>SberGate version: 1.0.15</h1>')
+   AddBlok('<h1>SberGate version: 1.0.16</h1>')
    AddBlok('<a href="index.html">Перейти к настройкам СберАгента</a></p>')
    AddBlok('<a href="SberGate.log">Скачать SberGate.log</a></p>')
    AddBlok('<h2>Команды:</h2>')

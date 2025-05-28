@@ -1,12 +1,10 @@
 ---
 name: "MQTT SberGate"
 slug: "mqtt-sber-gate"
-version: "1.0.15"
+version: "1.0.16"
 description: "MQTT SberGate SberDevice IoT Agent for Home Assistant"
 url: "https://github.com/JanchEwgen/MQTT-SberGate"
 webui: "http://[HOST]:[PORT:9123]"
-startup: application
-boot: auto
 init: false
 arch:
   - aarch64
