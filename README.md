@@ -78,7 +78,22 @@ services:
       options:
         max-size: 10m
 ```
-Где - /DATA/AppData/mqttsbergate папка на хосте в которой будет создан options.json, его нужно будет предзаполнить своими параметрами и рестартовать контейнер
+Где - /DATA/AppData/mqttsbergate папка на хосте в которой необходимо создать файл options.json, его нужно будет предзаполнить своими параметрами и рестартовать контейнер
+
+...
+{
+  "ha-api_url": "http://192.168.2.113:8123",
+  "ha-api_token": "*",
+  "sber-mqtt_broker": "mqtt-partners.iot.sberdevices.ru",
+  "sber-mqtt_broker_port": 8883,
+  "sber-mqtt_login": "*",
+  "sber-mqtt_password": "*",
+  "sber-http_api_endpoint": "https://mqtt-partners.iot.sberdevices.ru",
+  "log_level": "INFO",
+  "host": "192.168.2.113",
+  "port": 9123
+}
+...
 
 ## Ссылки.
 
