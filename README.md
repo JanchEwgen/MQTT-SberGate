@@ -58,21 +58,21 @@ git clone https://github.com/JanchEwgen/MQTT-SberGate/tree/main
 
 Собираем образ под текущую версию
 ```
-docker --debug build -t mqttsbergate:1.0.15 --build-arg BUILD_version=1.0.15 --build-arg BUILD_FROM=python:3.12 --build-arg BUILD_REF=mqttsber1 .
+docker --debug build -t mqttsbergate:1.0.16 --build-arg BUILD_version=1.0.16 --build-arg BUILD_FROM=python:3 --build-arg BUILD_REF=mqttsber2 .
 ```
 Используем следующее для DockerCompose.yaml (portainer или ваш способ на выбор через docker-compose-up например)
 ```
 services:
-  mqttsbergate:
-    container_name: mqttsbergate
-    image: mqttsbergate:1.0.15
+  salute-bridge:
+    container_name: salute-bridge
+    image: mqttsbergate:1.0.16
     network_mode: host
     ports:
       - "9123:9123"
     expose:
       - "9123"
     volumes:
-      - /DATA/AppData/mqttsbergate:/data
+      - /DATA/AppData/salutebridge:/data
     restart: always
     logging:
       options:
