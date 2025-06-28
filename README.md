@@ -50,6 +50,51 @@
 Теперь стало возможно сказать ассистенту: "Включи камеру на улице". После чего отрабатывает скрипт HA который отправляет в VLC нужный поток.
 Попытки прокинуть script как камеру не увенчались успехом, даже писал в поддержку. Получил ответ, что-то вроде "пока не реализовано".
 
+## Сборка докера.
+Скачиваем репозиторий через GIT, идём в папку где находится Dockerfile
+```
+git clone https://github.com/JanchEwgen/MQTT-SberGate/tree/main
+```
+
+Собираем образ под текущую версию
+```
+docker --debug build -t mqttsbergate:1.0.16 --build-arg BUILD_version=1.0.16 --build-arg BUILD_FROM=python:3 --build-arg BUILD_REF=mqttsber2 .
+```
+Используем следующее для DockerCompose.yaml (portainer или ваш способ на выбор через docker-compose-up например)
+```
+services:
+  salute-bridge:
+    container_name: salute-bridge
+    image: mqttsbergate:1.0.16
+    network_mode: host
+    ports:
+      - "9123:9123"
+    expose:
+      - "9123"
+    volumes:
+      - /DATA/AppData/salutebridge:/data
+    restart: always
+    logging:
+      options:
+        max-size: 10m
+```
+Где - /DATA/AppData/mqttsbergate папка на хосте в которой необходимо создать файл options.json, его нужно будет предзаполнить своими параметрами и рестартовать контейнер
+
+```
+{
+  "ha-api_url": "http://192.168.2.113:8123",
+  "ha-api_token": "*",
+  "sber-mqtt_broker": "mqtt-partners.iot.sberdevices.ru",
+  "sber-mqtt_broker_port": 8883,
+  "sber-mqtt_login": "*",
+  "sber-mqtt_password": "*",
+  "sber-http_api_endpoint": "https://mqtt-partners.iot.sberdevices.ru",
+  "log_level": "INFO",
+  "host": "192.168.2.113",
+  "port": 9123
+}
+```
+
 ## Ссылки.
 
 Для работы с MQTT используется [Eclipse Paho™ MQTT Python Client](https://github.com/eclipse/paho.mqtt.python)
