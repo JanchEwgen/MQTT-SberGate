@@ -5,7 +5,7 @@ import threading
 import re
 import requests
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from logger import log_info, log_error, log_warning, log_debug
+from logger import log_info, log_error, log_warning, log_debug, LOG_FILE
 import sber_api
 from config import VERSION
 
@@ -203,6 +203,13 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.mqtt_client.publish_config()
 
     def do_GET(self):
+        if self.path == '/SberGate.log':
+            full_path = os.path.join(os.getcwd(), LOG_FILE)
+            mime_type = MIME_TYPES.get('.log', MIME_TYPES['default'])
+            log_debug(f"Отдача лог-файла: {full_path}")
+            self.send_static_file(full_path, f"{mime_type}; charset=utf-8")
+            return
+
         static_file_path = STATIC_ROUTES.get(self.path)
         if static_file_path:
             _, ext = os.path.splitext(static_file_path)
