@@ -15,7 +15,12 @@ def _read_version_from_yaml():
             return m.group(1).strip()
     except Exception:
         pass
-    return os.environ.get('MQTT_SBERGATE_VERSION', 'unknown')
+    env_version = (
+        os.environ.get('MQTT_SBERGATE_VERSION')
+        or os.environ.get('BUILD_VERSION')
+        or os.environ.get('HASSIO_ADDON_VERSION')
+    )
+    return env_version if env_version else 'unknown'
 
 VERSION = _read_version_from_yaml()
 
