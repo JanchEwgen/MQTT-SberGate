@@ -20,3 +20,14 @@ text-align: left;
 
 tbody tr:nth-child(odd){ background: #fff; }
 tbody tr:nth-child(even){background: #E7E7E7;}
+
+td select {
+    width: 100%;
+    min-width: 140px;
+    padding: 2px 4px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+}

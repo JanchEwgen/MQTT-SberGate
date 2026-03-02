@@ -10,6 +10,9 @@ RUN \
     py3-pip \
     python3
 
+# Expose build-time version to runtime
+ENV MQTT_SBERGATE_VERSION=$BUILD_VERSION
+
 # Python 3 HTTP Server serves the current working dir
 # So let's set it to our add-on persistent data directory.
 WORKDIR /data
@@ -19,4 +22,4 @@ COPY rootfs /
 
 RUN chmod a+x /app/run.sh
 
-CMD [ "/app/run.sh" ]
+CMD [ "/bin/sh","/app/run.sh" ]
